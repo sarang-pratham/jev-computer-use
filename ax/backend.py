@@ -8,6 +8,7 @@ import ApplicationServices
 class AXBackendError(RuntimeError):
     pass
 
+
 class PyObjCAXBackend:
     def __init__(self) -> None:
         self._elements: dict[str, Any] = {}
@@ -57,4 +58,6 @@ class PyObjCAXBackend:
     @staticmethod
     def _check(error: int, operation: str) -> None:
         if error != ApplicationServices.kAXErrorSuccess:
-            raise AXBackendError(f"Accessibility error {error} while trying to {operation}")
+            raise AXBackendError(
+                f"Accessibility error {error} while trying to {operation}"
+            )

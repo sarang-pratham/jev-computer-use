@@ -38,7 +38,9 @@ class OperationBehaviourTests(unittest.TestCase):
         )
         candidate = next(
             candidate
-            for candidate in build_candidates((element,), include_global_operations=False)
+            for candidate in build_candidates(
+                (element,), include_global_operations=False
+            )
             if candidate.operation == JEVOperation.CLICK
         )
 
@@ -57,7 +59,9 @@ class OperationBehaviourTests(unittest.TestCase):
         )
         candidate = next(
             candidate
-            for candidate in build_candidates((element,), include_global_operations=False)
+            for candidate in build_candidates(
+                (element,), include_global_operations=False
+            )
             if candidate.operation == JEVOperation.TYPE_TEXT
         )
 
@@ -90,9 +94,7 @@ class OperationBehaviourTests(unittest.TestCase):
         self.assertNotIn(JEVOperation.CHECK, checked)
 
     def test_control_candidates_are_available_without_an_element(self) -> None:
-        operations = {
-            candidate.operation for candidate in build_candidates(())
-        }
+        operations = {candidate.operation for candidate in build_candidates(())}
 
         self.assertEqual(
             operations,

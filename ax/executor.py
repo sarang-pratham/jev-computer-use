@@ -17,13 +17,16 @@ from .operations.models import JEVOperation
 
 
 class AXBackend(Protocol):
-    def perform_action(self, element_id: str, action: str) -> None: ...
+    def perform_action(self, element_id: str, action: str) -> None:
+        ...
 
-    def set_attribute(self, element_id: str, attribute: str, value: Any) -> None: ...
+    def set_attribute(self, element_id: str, attribute: str, value: Any) -> None:
+        ...
 
 
 class ExecutionError(RuntimeError):
     pass
+
 
 @dataclass(frozen=True, slots=True)
 class ExecutionResult:
@@ -72,12 +75,16 @@ class OperationExecutor:
         }
         if operation in action_by_operation:
             self._backend.perform_action(element_id, action_by_operation[operation])
-            return ExecutionResult(operation, element_id, action_by_operation[operation])
+            return ExecutionResult(
+                operation, element_id, action_by_operation[operation]
+            )
 
         if operation == JEVOperation.TYPE_TEXT:
             text = arguments.get("text")
             if not isinstance(text, str):
-                raise ExecutionError("TYPE_TEXT requires a string argument named 'text'")
+                raise ExecutionError(
+                    "TYPE_TEXT requires a string argument named 'text'"
+                )
             self._backend.set_attribute(element_id, AX_VALUE, text)
             return ExecutionResult(operation, element_id, f"{AX_VALUE}=<redacted>")
 

@@ -5,6 +5,7 @@ description = "Computer-use using JEV"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "pre-commit>=4.6.2",
     "pyobjc-framework-applicationservices>=12.2.2",
     "pyobjc-framework-cocoa>=12.2.2",
 ]

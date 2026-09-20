@@ -140,7 +140,9 @@ def operation_spec(operation: JEVOperation) -> OperationSpec:
     try:
         return _SPECS[operation]
     except KeyError as exc:
-        raise ValueError(f"Operation is not available in the AX adapter: {operation}") from exc
+        raise ValueError(
+            f"Operation is not available in the AX adapter: {operation}"
+        ) from exc
 
 
 def _checked(element: AXElementSnapshot) -> bool | None:
