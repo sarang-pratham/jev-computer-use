@@ -1,0 +1,10 @@
+[project]
+name = "jev-computer-use"
+version = "0.1.0"
+description = "Computer-use using JEV"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "pyobjc-framework-applicationservices>=12.2.2",
+    "pyobjc-framework-cocoa>=12.2.2",
+]
