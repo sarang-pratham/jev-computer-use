@@ -5,7 +5,9 @@ description = "Computer-use using JEV"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "httpx>=0.28.1",
     "pre-commit>=4.6.2",
+    "pydantic-settings>=2.15.0",
     "pyobjc-framework-applicationservices>=12.2.2",
     "pyobjc-framework-cocoa>=12.2.2",
 ]

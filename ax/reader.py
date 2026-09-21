@@ -1,13 +1,12 @@
 from __future__ import annotations
 
 import subprocess
-import os
-import sys
 from typing import Any
 
 import ApplicationServices
 from AppKit import NSWorkspace
 
+from .applications import controller_identity as _controller_identity
 from .backend import AXBackendError, PyObjCAXBackend
 from .constants import (
     AX_CHILDREN,
@@ -48,7 +47,7 @@ def open_accessibility_settings() -> bool:
 
 
 def controller_identity() -> str:
-    return f"{os.path.basename(sys.executable)} (pid={os.getpid()})"
+    return _controller_identity()
 
 
 class AXReader:
@@ -151,24 +150,24 @@ class AXReader:
             return
 
         if role == "AXApplication":
-            windows = self._attribute(element_id, AX_WINDOWS)
-            if isinstance(windows, (list, tuple)) and windows:
+            windows = self._items(self._attribute(element_id, AX_WINDOWS))
+            if windows:
                 child_groups = [windows]
             else:
                 focused_window = self._attribute(element_id, AX_FOCUSED_WINDOW)
                 if focused_window is not None:
                     child_groups = [[focused_window]]
                 else:
-                    child_groups = [self._attribute(element_id, AX_CHILDREN)]
+                    child_groups = [
+                        self._items(self._attribute(element_id, AX_CHILDREN))
+                    ]
         else:
-            child_groups = [self._attribute(element_id, AX_CHILDREN)]
+            child_groups = [self._items(self._attribute(element_id, AX_CHILDREN))]
 
         next_path = parent_path + (snapshot.label,)
         seen_children: set[int] = set()
         child_index = 0
         for children in child_groups:
-            if not isinstance(children, (list, tuple)):
-                continue
             for child in children:
                 if len(self._elements) >= self.max_elements:
                     return
@@ -183,6 +182,15 @@ class AXReader:
                     depth + 1,
                 )
                 child_index += 1
+
+    @staticmethod
+    def _items(value: Any) -> tuple[Any, ...]:
+        if value is None or isinstance(value, (str, bytes)):
+            return ()
+        try:
+            return tuple(value)
+        except TypeError:
+            return ()
 
     def _attribute(self, element_id: str, attribute: str) -> Any:
         try:
