@@ -3,14 +3,22 @@ from __future__ import annotations
 import unittest
 
 from ax.constants import (
+    AX_CHILDREN,
     AX_FOCUSED,
+    AX_FOCUSED_WINDOW,
     AX_PRESS,
+    AX_ROLE,
+    AX_SUBROLE,
+    AX_TITLE,
     AX_VALUE,
+    AX_WINDOWS,
     ROLE_BUTTON,
     ROLE_CHECKBOX,
     ROLE_TEXT_FIELD,
 )
+from ax.backend import AXBackendError
 from ax.executor import OperationExecutor
+from ax.reader import AXReader
 from ax.snapshot import AXElementSnapshot
 from ax.operations.candidates import build_candidates
 from ax.operations.models import JEVOperation
@@ -28,7 +36,69 @@ class FakeBackend:
         self.attributes.append((element_id, attribute, value))
 
 
+class FakeReaderBackend:
+    def __init__(self) -> None:
+        self.bound: dict[str, str] = {}
+        self.attributes = {
+            "root": {
+                AX_ROLE: "AXApplication",
+                AX_TITLE: "Demo",
+                AX_CHILDREN: [],
+                AX_WINDOWS: [],
+                AX_FOCUSED_WINDOW: "window",
+            },
+            "window": {
+                AX_ROLE: "AXWindow",
+                AX_TITLE: "Demo window",
+                AX_CHILDREN: ["button", "secret"],
+            },
+            "button": {AX_ROLE: ROLE_BUTTON, AX_TITLE: "Search"},
+            "secret": {
+                AX_ROLE: ROLE_TEXT_FIELD,
+                AX_SUBROLE: "AXSecureTextField",
+                AX_TITLE: "Password",
+                AX_VALUE: "hidden",
+            },
+        }
+        self.actions = {"button": (AX_PRESS,)}
+
+    def clear(self) -> None:
+        self.bound.clear()
+
+    def bind(self, element_id: str, element: str) -> None:
+        self.bound[element_id] = element
+
+    def copy_attribute(self, element_id: str, attribute: str):
+        element = self.attributes[self.bound[element_id]]
+        if attribute not in element:
+            raise AXBackendError(attribute)
+        return element[attribute]
+
+    def copy_actions(self, element_id: str) -> tuple[str, ...]:
+        return self.actions.get(self.bound[element_id], ())
+
+    def is_attribute_settable(self, element_id: str, attribute: str) -> bool:
+        return self.bound[element_id] == "secret" and attribute == AX_VALUE
+
+
 class OperationBehaviourTests(unittest.TestCase):
+    def test_reader_builds_snapshot_and_redacts_secure_values(self) -> None:
+        backend = FakeReaderBackend()
+        snapshot = AXReader(backend=backend).read_root(
+            "root",
+            pid=7,
+            application_name="Demo",
+        )
+
+        button = snapshot.by_id("app:7/0/0")
+        secret = snapshot.by_id("app:7/0/1")
+
+        self.assertEqual(button.label, "Search")
+        self.assertIn("app:7/0", backend.bound)
+        self.assertIn("app:7/0/0", backend.bound)
+        self.assertTrue(secret.redacted)
+        self.assertIsNone(secret.value)
+
     def test_button_candidate_is_executable(self) -> None:
         element = AXElementSnapshot(
             element_id="search",

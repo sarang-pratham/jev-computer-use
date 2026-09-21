@@ -13,6 +13,9 @@ class PyObjCAXBackend:
     def __init__(self) -> None:
         self._elements: dict[str, Any] = {}
 
+    def clear(self) -> None:
+        self._elements.clear()
+
     def bind(self, element_id: str, element: Any) -> None:
         self._elements[element_id] = element
 
