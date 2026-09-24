@@ -90,6 +90,14 @@ def run_goal(goal: str, open_settings: bool = False) -> int:
         agent.close()
 
 
+def agent_cli() -> int:
+    parser = argparse.ArgumentParser(prog="jx")
+    parser.add_argument("goal")
+    parser.add_argument("--open-settings", action="store_true")
+    args = parser.parse_args()
+    return run_goal(args.goal, args.open_settings)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("command", choices=("inspect", "run"))

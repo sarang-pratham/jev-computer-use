@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Protocol
 
+from .backend import AXBackendError
 from .constants import (
     AX_DECREMENT,
     AX_FOCUSED,
@@ -74,7 +75,10 @@ class OperationExecutor:
             JEVOperation.SCROLL_DOWN: AX_SCROLL_DOWN,
         }
         if operation in action_by_operation:
-            self._backend.perform_action(element_id, action_by_operation[operation])
+            try:
+                self._backend.perform_action(element_id, action_by_operation[operation])
+            except AXBackendError as error:
+                raise ExecutionError(str(error)) from error
             return ExecutionResult(
                 operation, element_id, action_by_operation[operation]
             )
@@ -85,11 +89,17 @@ class OperationExecutor:
                 raise ExecutionError(
                     "TYPE_TEXT requires a string argument named 'text'"
                 )
-            self._backend.set_attribute(element_id, AX_VALUE, text)
+            try:
+                self._backend.set_attribute(element_id, AX_VALUE, text)
+            except AXBackendError as error:
+                raise ExecutionError(str(error)) from error
             return ExecutionResult(operation, element_id, f"{AX_VALUE}=<redacted>")
 
         if operation == JEVOperation.FOCUS:
-            self._backend.set_attribute(element_id, AX_FOCUSED, True)
+            try:
+                self._backend.set_attribute(element_id, AX_FOCUSED, True)
+            except AXBackendError as error:
+                raise ExecutionError(str(error)) from error
             return ExecutionResult(operation, element_id, f"{AX_FOCUSED}=True")
 
         raise ExecutionError(f"No AX handler implemented for {operation}")

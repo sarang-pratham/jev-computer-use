@@ -17,7 +17,7 @@ from ax.constants import (
     ROLE_TEXT_FIELD,
 )
 from ax.backend import AXBackendError
-from ax.executor import OperationExecutor
+from ax.executor import ExecutionError, OperationExecutor
 from ax.reader import AXReader
 from ax.snapshot import AXElementSnapshot
 from ax.operations.candidates import build_candidates
@@ -34,6 +34,11 @@ class FakeBackend:
 
     def set_attribute(self, element_id: str, attribute: str, value: object) -> None:
         self.attributes.append((element_id, attribute, value))
+
+
+class FailingBackend(FakeBackend):
+    def perform_action(self, element_id: str, action: str) -> None:
+        raise AXBackendError("action failed")
 
 
 class FakeReaderBackend:
@@ -119,6 +124,24 @@ class OperationBehaviourTests(unittest.TestCase):
 
         self.assertEqual(result.operation, JEVOperation.CLICK)
         self.assertEqual(backend.actions, [("search", AX_PRESS)])
+
+    def test_backend_action_failure_becomes_execution_error(self) -> None:
+        element = AXElementSnapshot(
+            element_id="search",
+            role=ROLE_BUTTON,
+            title="Search",
+            actions=frozenset({AX_PRESS}),
+        )
+        candidate = next(
+            candidate
+            for candidate in build_candidates(
+                (element,), include_global_operations=False
+            )
+            if candidate.operation == JEVOperation.CLICK
+        )
+
+        with self.assertRaises(ExecutionError):
+            OperationExecutor(FailingBackend()).execute(candidate)
 
     def test_text_candidate_writes_the_requested_value(self) -> None:
         element = AXElementSnapshot(

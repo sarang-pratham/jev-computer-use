@@ -5,6 +5,14 @@ from typing import Any
 import ApplicationServices
 
 
+AX_ERROR_NAMES = {
+    getattr(ApplicationServices, name): name
+    for name in dir(ApplicationServices)
+    if name.startswith("kAXError")
+    and isinstance(getattr(ApplicationServices, name), int)
+}
+
+
 class AXBackendError(RuntimeError):
     pass
 
@@ -61,6 +69,8 @@ class PyObjCAXBackend:
     @staticmethod
     def _check(error: int, operation: str) -> None:
         if error != ApplicationServices.kAXErrorSuccess:
+            error_name = AX_ERROR_NAMES.get(error)
+            detail = f" ({error_name})" if error_name else ""
             raise AXBackendError(
-                f"Accessibility error {error} while trying to {operation}"
+                f"Accessibility error {error}{detail} while trying to {operation}"
             )

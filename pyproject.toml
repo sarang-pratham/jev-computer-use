@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "Computer-use using JEV"
 readme = "README.md"
 requires-python = ">=3.12"
+scripts = { jx = "main:agent_cli" }
 dependencies = [
     "httpx>=0.28.1",
     "pre-commit>=4.6.2",
@@ -11,3 +12,19 @@ dependencies = [
     "pyobjc-framework-applicationservices>=12.2.2",
     "pyobjc-framework-cocoa>=12.2.2",
 ]
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+py-modules = [
+    "agent",
+    "application_resolver",
+    "goal_parser",
+    "jev",
+    "main",
+    "settings",
+    "text_provider",
+]
+packages = ["ax", "ax.operations"]

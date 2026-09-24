@@ -118,7 +118,7 @@ wheels = [
 [[package]]
 name = "jev-computer-use"
 version = "0.1.0"
-source = { virtual = "." }
+source = { editable = "." }
 dependencies = [
     { name = "httpx" },
     { name = "pre-commit" },

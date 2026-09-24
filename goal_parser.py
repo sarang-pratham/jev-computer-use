@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from typing import Any
+from typing import Any, Literal
 
 import httpx
 from pydantic import BaseModel, ValidationError
@@ -15,6 +15,7 @@ class GoalParserError(RuntimeError):
 
 class GoalContext(BaseModel):
     application_name: str | None = None
+    capability: Literal["web_browser", "camera", "calendar"] | None = None
     application_required: bool = False
 
 
@@ -41,16 +42,17 @@ class OpenRouterGoalParser:
                 {
                     "role": "system",
                     "content": (
-                        "Identify the macOS application the user wants to control. "
-                        "The goal may use arbitrary natural language. Return the "
-                        "application's normal display name when it is named or "
-                        "clearly implied. Return null when no application is "
-                        "specified. Set application_required to true when the goal "
-                        "clearly depends on a specific application but its name is "
-                        "ambiguous. Never infer an application only from the "
-                        "action. For example, a goal about moving between "
-                        "appointments and opening an existing event implies "
-                        "Calendar. Return JSON only."
+                        "Interpret the macOS application intent in the goal. The "
+                        "goal may use arbitrary natural language. Set "
+                        "application_name only when a specific application is "
+                        "named, such as Safari or Calendar. Otherwise set it to "
+                        "null and use one canonical capability when the goal "
+                        "describes an application role: web_browser, camera, or "
+                        "calendar. For example, browser maps to web_browser and "
+                        "taking a picture maps to camera. Set application_required "
+                        "to true when the goal depends on an application or "
+                        "capability. A specific application name takes precedence "
+                        "over a capability. Return JSON only."
                     ),
                 },
                 {"role": "user", "content": goal},
@@ -70,9 +72,22 @@ class OpenRouterGoalParser:
                             "application_name": {
                                 "type": ["string", "null"],
                             },
+                            "capability": {
+                                "type": ["string", "null"],
+                                "enum": [
+                                    "web_browser",
+                                    "camera",
+                                    "calendar",
+                                    None,
+                                ],
+                            },
                             "application_required": {"type": "boolean"},
                         },
-                        "required": ["application_name", "application_required"],
+                        "required": [
+                            "application_name",
+                            "capability",
+                            "application_required",
+                        ],
                         "additionalProperties": False,
                     },
                 },

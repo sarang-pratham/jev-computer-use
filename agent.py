@@ -8,6 +8,10 @@ from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import Any
 
+from application_resolver import (
+    ApplicationResolutionError,
+    resolve_application,
+)
 from ax.executor import ExecutionError, OperationExecutor
 from ax.applications import (
     ApplicationActivationError,
@@ -291,17 +295,23 @@ class ComputerUseAgent:
         except GoalParserError as error:
             self._block(str(error))
             return False
-        self.target_application = context.application_name
         self._event(
-            f"goal parser result: application={self.target_application or 'none'}"
+            f"goal parser result: application={context.application_name or 'none'}"
+            f" capability={context.capability or 'none'}"
             f" required={context.application_required}"
         )
-        if context.application_required and self.target_application is None:
-            self._block("The goal requires an application, but none was identified")
+        try:
+            resolution = resolve_application(context)
+        except ApplicationResolutionError as error:
+            self._block(str(error))
             return False
+        self.target_application = resolution.name if resolution else None
         self._goal_context_resolved = True
-        if self.target_application:
-            self._event(f"target application identified: {self.target_application}")
+        if resolution:
+            self._event(
+                f"application resolved: {resolution.name}"
+                f" (source={resolution.source})"
+            )
         else:
             self._event("no target application identified; using the frontmost app")
         return True

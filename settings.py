@@ -9,6 +9,9 @@ class Settings(BaseSettings):
     openrouter_api_key: SecretStr | None = None
     openrouter_model: str = "openrouter/free"
     openrouter_url: str = "https://openrouter.ai/api/v1/chat/completions"
+    default_browser: str = "Google Chrome"
+    default_camera: str = "Photo Booth"
+    default_calendar: str = "Calendar"
 
     model_config = SettingsConfigDict(
         env_file=".env",
